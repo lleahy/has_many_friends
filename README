@@ -1,0 +1,99 @@
+This is a copy of the old git://github.com/thenetduck/has_many_friends.git repository that was removed from github
+
+===================================================
+HasManyFriends - Steve Ehrenberg - http://dnite.org
+===================================================
+has_many_friends is a plugin based off of the friendship_plugin that can be found
+here (http://svn.webwideconsulting.com/svn/friendship_plugin/). This version of the
+plugin adds some features I wanted as well as eliminates the need for 2 friendship
+rows created in the table. The goal is to make it relatively seamless for anyone to
+create a fully functional friends system for their application.
+
+** MAJOR NOTE ** I took this plugin that hasn't been updated for 7 years and made it work for rails 3 by taking out the generator, 
+This means you need to migrate or generate the correct tables to make it work. This is a gem as well so you can get it off of gemcutter. Ill be updating these docs when I get a chance. - The Net Duck
+
+Install
+=======
+Plugin:
+   rails plugin install 
+      git@github.com:thenetduck/has_many_friends.git
+Gem: 
+   In your Gemfile 
+      gem "has_many_friends", :git => "git@github.com:thenetduck/has_many_friends.git"
+
+Setup
+=====
+Create a friendship model
+
+   rails g model friendship user_id:integer friend_id:integer created_at:datetime accepted_at:datetime
+
+Or create it manually with this as your migration file.
+   class YourMigrationName < ActiveRecord::Migration
+
+      def self.up
+         create_table :<%= table_name %>, :force => true do |t|
+            t.column "user_id",     :integer, :null => false
+            t.column "friend_id",   :integer, :null => false
+            t.column "created_at",  :datetime
+            t.column "accepted_at", :datetime
+          end
+       end
+
+       def self.down
+        drop_table :<%= table_name %>
+       end
+
+   end
+
+Add these lines to your friendship model. 
+   belongs_to :friendshipped_by_me,   :foreign_key => "user_id",   :class_name => "User"
+   belongs_to :friendshipped_for_me,  :foreign_key => "friend_id", :class_name => "User"
+
+You should be just about set! All you need to do is add the following method
+to your User model.
+
+   class User < ActiveRecord::Base
+     has_many_friends
+     # the rest of your user model ...
+     # ...
+   end
+
+
+Usage
+=====
+After the plugin is installed. All of these super cool methods will be attached to 
+any user.
+
+These methods are the actual associations. They return what you'd expect.
+   user.friends_for_me
+   user.friends_by_me
+   user.pending_friends_for_me
+   user.pending_friends_by_me
+
+Again, these will return what you would expect them to return.
+   user.friends
+   user.pending_friends
+   user.pending_or_accepted_friends
+
+## The following 3 methods were changed as of revision 8. They have been listed here
+## as these methods, but for some reason, i never changed their names in the actual
+## plugin file. If your using a pre-8 version and things broke for you, use the new
+## method names in your application. Sorry for the inconvenience.
+Returns true if user is friends with friend.
+   user.is_friends_with? friend
+   user.is_pending_friends_with? friend
+   user.is_friends_or_pending_with? friend
+
+Creates, deletes or updates friendship requests.
+   user.request_friendship_with friend
+   user.delete_friendship_with friend
+   user.accept_friendship_with friend
+
+Bypass the request and just make a friend.
+   user.become_friends_with! friend
+
+Returns the friendship object (good for looking up extra attributes about
+the friendship, like when it was accepted and such.
+   user.friendship friend
+
+Copyright (c) 2007 Steve Ehrenberg, released under the MIT license
